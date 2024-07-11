@@ -1,6 +1,13 @@
+.PHONY: http.recurring
+http.recurring:
+	@go run github.com/air-verse/air -c .air_recurring.toml
+
 .PHONY: build
-build:
-	@go build -o ./.bin/main ./example/recurring/main.go
+build: build.recurring
+
+.PHONY: build.recurring
+build.recurring:
+	@go build -o ./.bin/recurring ./example/recurring/main.go
 
 .PHONY: lint
 lint:
