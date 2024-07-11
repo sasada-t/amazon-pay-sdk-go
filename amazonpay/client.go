@@ -41,7 +41,7 @@ var (
 	}
 )
 
-// Client type
+// Client type.
 type Client struct {
 	PublicKeyID string
 	PrivateKey  []byte
@@ -88,7 +88,7 @@ func (c *Client) createEndpointURL() string {
 	return "https://" + host + "/" + modePath + "/"
 }
 
-// NewRequest method
+// NewRequest method.
 func (c *Client) NewRequest(method, path string, body interface{}) (*http.Request, error) {
 	u, err := c.endpoint.Parse(path)
 	if err != nil {
@@ -104,7 +104,7 @@ func (c *Client) NewRequest(method, path string, body interface{}) (*http.Reques
 		reqBody = bytes.NewBuffer(b)
 	}
 
-	req, err := http.NewRequest(method, u.String(), reqBody)
+	req, err := http.NewRequestWithContext(context.Background(), method, u.String(), reqBody)
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +138,14 @@ func (c *Client) NewRequest(method, path string, body interface{}) (*http.Reques
 	return req, nil
 }
 
-// Do method
+func (c *Client) handleResponseBody(resp *http.Response, v interface{}) error {
+	if w, ok := v.(io.Writer); ok {
+		_, err := io.Copy(w, resp.Body)
+		return err
+	}
+	return json.NewDecoder(resp.Body).Decode(v)
+}
+
 func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*http.Response, error) {
 	resp, err := c.HTTPClient.Do(req.WithContext(ctx))
 	if err != nil {
@@ -149,16 +156,11 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*htt
 		}
 		return nil, err
 	}
-
 	defer resp.Body.Close()
 
 	if v != nil {
-		if w, ok := v.(io.Writer); ok {
-			io.Copy(w, resp.Body)
-		} else {
-			if err := json.NewDecoder(resp.Body).Decode(v); err != nil {
-				return resp, err
-			}
+		if err := c.handleResponseBody(resp, v); err != nil {
+			return resp, err
 		}
 	}
 	return resp, nil

@@ -1,17 +1,17 @@
-package main
+package main //nolint:cyclop // for example
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"text/template"
+	"time"
 
 	"github.com/gotokatsuya/amazon-pay-sdk-go/amazonpay"
 )
 
-// envs
+// envs.
 var (
 	publicKeyID    = os.Getenv("AMAZON_PAY_PUBLIC_KEY_ID")
 	privateKeyPath = os.Getenv("AMAZON_PAY_PRIVATE_KEY_PATH")
@@ -19,13 +19,13 @@ var (
 	merchantID     = os.Getenv("AMAZON_PAY_MERCHANT_ID")
 )
 
-// local datastore
+// local datastore.
 var (
 	chargePermissionID string
 )
 
-func main() {
-	privateKeyData, err := ioutil.ReadFile(privateKeyPath)
+func main() { //nolint:gocognit,cyclop // for example
+	privateKeyData, err := os.ReadFile(privateKeyPath)
 	if err != nil {
 		panic(err)
 	}
@@ -88,6 +88,7 @@ func main() {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		defer httpResp.Body.Close()
 		switch httpResp.StatusCode {
 		case http.StatusOK, http.StatusCreated:
 			data := struct {
@@ -127,6 +128,7 @@ func main() {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		defer httpResp.Body.Close()
 		switch httpResp.StatusCode {
 		case http.StatusOK, http.StatusCreated:
 			http.Redirect(w, r, resp.WebCheckoutDetails.AmazonPayRedirectURL, http.StatusFound)
@@ -147,6 +149,7 @@ func main() {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		defer httpResp.Body.Close()
 		switch httpResp.StatusCode {
 		case http.StatusOK, http.StatusCreated:
 			log.Println("confirm: " + resp.StatusDetails.State)
@@ -170,6 +173,7 @@ func main() {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}
+				defer httpResp.Body.Close()
 				switch httpResp.StatusCode {
 				case http.StatusOK, http.StatusCreated:
 				default:
@@ -192,6 +196,7 @@ func main() {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		defer httpResp.Body.Close()
 		switch httpResp.StatusCode {
 		case http.StatusOK, http.StatusCreated:
 			log.Println("recurring: " + cpResp.StatusDetails.State)
@@ -210,6 +215,7 @@ func main() {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}
+				defer httpResp.Body.Close()
 				log.Println(httpResp.StatusCode)
 				switch httpResp.StatusCode {
 				case http.StatusOK, http.StatusCreated:
@@ -235,6 +241,7 @@ func main() {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		defer httpResp.Body.Close()
 		switch httpResp.StatusCode {
 		case http.StatusOK, http.StatusCreated:
 			log.Println("Success /recurring/close")
@@ -245,5 +252,12 @@ func main() {
 	})
 
 	fmt.Println("http://localhost:8000")
-	log.Fatalln(http.ListenAndServe(":8000", nil))
+	server := &http.Server{
+		Addr:         ":8000",
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  15 * time.Second,
+		Handler:      nil,
+	}
+	log.Fatalln(server.ListenAndServe())
 }

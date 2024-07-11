@@ -11,7 +11,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"sort"
@@ -23,12 +23,13 @@ const (
 )
 
 // CanonicalRequest =
-//  HTTPRequestMethod + '\n' +
-//  CanonicalURI + '\n' +
-//  CanonicalQueryString + '\n' +
-//  CanonicalHeaders + '\n' +
-//  SignedHeaders + '\n' +
-//  HexEncode(Hash(RequestPayload))
+//
+//	HTTPRequestMethod + '\n' +
+//	CanonicalURI + '\n' +
+//	CanonicalQueryString + '\n' +
+//	CanonicalHeaders + '\n' +
+//	SignedHeaders + '\n' +
+//	HexEncode(Hash(RequestPayload))
 func CanonicalRequest(r *http.Request) (string, error) {
 	data, err := RequestPayload(r)
 	if err != nil {
@@ -38,7 +39,7 @@ func CanonicalRequest(r *http.Request) (string, error) {
 	return fmt.Sprintf("%s\n%s\n%s\n%s\n%s\n%s", r.Method, CanonicalURI(r), CanonicalQueryString(r), CanonicalHeaders(r), SignedHeaders(r), hexencode), err
 }
 
-// CanonicalURI returns request uri
+// CanonicalURI returns request uri.
 func CanonicalURI(r *http.Request) string {
 	pattens := strings.Split(r.URL.Path, "/")
 	var uri []string
@@ -57,8 +58,8 @@ func CanonicalURI(r *http.Request) string {
 		}
 	}
 	urlpath := "/" + strings.Join(uri, "/")
-	r.URL.Path = strings.Replace(urlpath, "+", "%20", -1)
-	return fmt.Sprintf("%s", r.URL.Path)
+	r.URL.Path = strings.ReplaceAll(urlpath, "+", "%20")
+	return r.URL.Path
 }
 
 func CanonicalQueryString(r *http.Request) string {
@@ -72,11 +73,11 @@ func CanonicalQueryString(r *http.Request) string {
 			} else {
 				kv = fmt.Sprintf("%s=%s", k, url.QueryEscape(v))
 			}
-			a = append(a, strings.Replace(kv, "+", "%20", -1))
+			a = append(a, strings.ReplaceAll(kv, "+", "%20"))
 		}
 	}
 	sort.Strings(a)
-	return fmt.Sprintf("%s", strings.Join(a, "&"))
+	return strings.Join(a, "&")
 }
 
 func CanonicalHeaders(r *http.Request) string {
@@ -99,15 +100,15 @@ func SignedHeaders(r *http.Request) string {
 		a = append(a, strings.ToLower(key))
 	}
 	sort.Strings(a)
-	return fmt.Sprintf("%s", strings.Join(a, ";"))
+	return strings.Join(a, ";")
 }
 
 func RequestPayload(r *http.Request) ([]byte, error) {
 	if r.Body == nil {
 		return []byte(""), nil
 	}
-	b, err := ioutil.ReadAll(r.Body)
-	r.Body = ioutil.NopCloser(bytes.NewBuffer(b))
+	b, err := io.ReadAll(r.Body)
+	r.Body = io.NopCloser(bytes.NewBuffer(b))
 	return b, err
 }
 
@@ -161,10 +162,10 @@ func trimString(s string) string {
 	var lastChar byte
 	s = strings.TrimSpace(s)
 	for _, v := range []byte(s) {
-		if byte(v) == byte('"') {
+		if v == '"' {
 			inQuote = !inQuote
 		}
-		if lastChar == byte(' ') && byte(v) == byte(' ') && !inQuote {
+		if lastChar == ' ' && v == ' ' && !inQuote {
 			continue
 		}
 		trimedString = append(trimedString, v)

@@ -47,8 +47,7 @@ type DeliverySpecifications struct {
 			IN struct {
 				StatesOrRegions []string `json:"statesOrRegions,omitempty"`
 			} `json:"IN,omitempty"`
-			JP struct {
-			} `json:"JP,omitempty"`
+			JP struct{} `json:"JP,omitempty"`
 		} `json:"restrictions,omitempty"`
 	} `json:"addressRestrictions,omitempty"`
 }
