@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"text/template"
 	"time"
 
@@ -23,6 +24,8 @@ var (
 var (
 	chargePermissionID string
 )
+
+const htmlDir = "./example/recurring"
 
 func main() { //nolint:gocognit,cyclop // for example
 	privateKeyData, err := os.ReadFile(privateKeyPath)
@@ -76,7 +79,7 @@ func main() { //nolint:gocognit,cyclop // for example
 			AmazonPayPublicKeyID: publicKeyID,
 			AmazonPayMerchantID:  merchantID,
 		}
-		if err := template.Must(template.ParseFiles("index.html")).Execute(w, data); err != nil {
+		if err := template.Must(template.ParseFiles(filepath.Join(htmlDir, "index.html"))).Execute(w, data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	})
@@ -98,7 +101,7 @@ func main() { //nolint:gocognit,cyclop // for example
 				CheckoutSessionID: resp.CheckoutSessionID,
 				PaymentDescriptor: resp.PaymentPreferences[0].PaymentDescriptor,
 			}
-			if err := template.Must(template.ParseFiles("review.html")).Execute(w, data); err != nil {
+			if err := template.Must(template.ParseFiles(filepath.Join(htmlDir, "review.html"))).Execute(w, data); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 		default:
@@ -182,7 +185,7 @@ func main() { //nolint:gocognit,cyclop // for example
 			case "Canceled":
 			}
 			data := struct{}{}
-			if err := template.Must(template.ParseFiles("confirm.html")).Execute(w, data); err != nil {
+			if err := template.Must(template.ParseFiles(filepath.Join(htmlDir, "confirm.html"))).Execute(w, data); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 		default:

@@ -3,6 +3,7 @@
 *.a
 *.so
 .bin
+privatekey.json
 
 # Folders
 _obj
