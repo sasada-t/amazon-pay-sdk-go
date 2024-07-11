@@ -30,7 +30,7 @@ func (c *CreateCheckoutSessionRequest) ToPayload() (string, error) {
 	return string(payloadByte), nil
 }
 
-// GenerateButtonSignature method
+// GenerateButtonSignature method.
 func (c *Client) GenerateButtonSignature(payload string) (string, error) {
 	stringToSign, err := signing.StringToSign(payload)
 	if err != nil {
