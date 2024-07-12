@@ -21,14 +21,9 @@ var (
 	merchantID     = os.Getenv("AMAZON_PAY_MERCHANT_ID")
 )
 
-// local datastore.
-var (
-	chargePermissionID string
-)
-
 const htmlDir = "./example/recurring"
 
-func main() { //nolint:gocognit,cyclop // for example
+func main() { //nolint:gocognit // for example
 	privateKeyData, err := os.ReadFile(privateKeyPath)
 	if err != nil {
 		panic(err)
@@ -161,7 +156,6 @@ func main() { //nolint:gocognit,cyclop // for example
 				log.Println("chargePermissionID:", resp.ChargePermissionID)
 				log.Println("MerchantMetadata:", resp.MerchantMetadata)
 				log.Println("prescriptionID:", prescriptionID)
-				chargePermissionID = resp.ChargePermissionID
 			case "Canceled":
 			}
 			data := struct{}{}
