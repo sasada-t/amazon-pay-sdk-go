@@ -7,7 +7,7 @@ http.oneshot:
 	@go run github.com/air-verse/air -c .air_oneshot.toml
 
 .PHONY: build
-build: build.recurring build.anytime
+build: build.recurring build.oneshot
 
 .PHONY: build.recurring
 build.recurring:
