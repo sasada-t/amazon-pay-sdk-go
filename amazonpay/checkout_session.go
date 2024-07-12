@@ -12,6 +12,7 @@ import (
 type CreateCheckoutSessionRequest struct {
 	WebCheckoutDetails     *WebCheckoutDetails     `json:"webCheckoutDetails,omitempty"`
 	StoreID                string                  `json:"storeId,omitempty"`
+	Scopes                 []string                `json:"scopes,omitempty"`
 	ChargePermissionType   string                  `json:"chargePermissionType,omitempty"`
 	RecurringMetadata      *RecurringMetadata      `json:"recurringMetadata,omitempty"`
 	DeliverySpecifications *DeliverySpecifications `json:"deliverySpecifications,omitempty"`
