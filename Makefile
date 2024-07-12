@@ -2,12 +2,20 @@
 http.recurring:
 	@go run github.com/air-verse/air -c .air_recurring.toml
 
+.PHONY: http.oneshot
+http.oneshot:
+	@go run github.com/air-verse/air -c .air_oneshot.toml
+
 .PHONY: build
-build: build.recurring
+build: build.recurring build.anytime
 
 .PHONY: build.recurring
 build.recurring:
 	@go build -o ./.bin/recurring ./example/recurring/main.go
+
+.PHONY: build.oneshot
+build.oneshot:
+	@go build -o ./.bin/oneshot ./example/oneshot/main.go
 
 .PHONY: lint
 lint:
