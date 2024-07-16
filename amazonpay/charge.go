@@ -47,3 +47,35 @@ func (c *Client) CreateCharge(ctx context.Context, req *CreateChargeRequest) (*C
 	}
 	return resp, httpResp, nil
 }
+
+type GetChargeResponse struct {
+	ErrorResponse
+	ChargeID            string            `json:"chargeId"`
+	ChargePermissionID  string            `json:"chargePermissionId"`
+	ChargeAmount        *Price            `json:"chargeAmount"`
+	CaptureAmount       *Price            `json:"captureAmount"`
+	RefundedAmount      *Price            `json:"refundedAmount"`
+	ConvertedAmount     string            `json:"convertedAmount"`
+	ConversionRate      string            `json:"conversionRate"`
+	SoftDescriptor      string            `json:"softDescriptor"`
+	MerchantMetadata    *MerchantMetadata `json:"merchantMetadata"`
+	ProviderMetadata    *ProviderMetadata `json:"providerMetadata"`
+	StatusDetails       *StatusDetails    `json:"statusDetails"`
+	CreationTimestamp   string            `json:"creationTimestamp"`
+	ExpirationTimestamp string            `json:"expirationTimestamp"`
+	ReleaseEnvironment  string            `json:"releaseEnvironment"`
+}
+
+func (c *Client) GetCharge(ctx context.Context, chargeID string) (*GetChargeResponse, *http.Response, error) {
+	path := fmt.Sprintf("%s/charges/%s", APIVersion, chargeID)
+	httpReq, err := c.NewRequest(http.MethodGet, path, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	resp := new(GetChargeResponse)
+	httpResp, err := c.Do(ctx, httpReq, resp)
+	if err != nil {
+		return nil, httpResp, err
+	}
+	return resp, httpResp, nil
+}
