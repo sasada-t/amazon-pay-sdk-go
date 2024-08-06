@@ -14,7 +14,7 @@ import (
 
 	"github.com/rs/xid"
 
-	"github.com/gotokatsuya/amazon-pay-sdk-go/amazonpay/signing"
+	"github.com/abyssparanoia/amazon-pay-sdk-go/amazonpay/signing"
 )
 
 const (
