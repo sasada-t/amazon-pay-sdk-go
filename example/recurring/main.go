@@ -1,6 +1,8 @@
 package main //nolint:cyclop // for example
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -15,10 +17,10 @@ import (
 
 // envs.
 var (
-	publicKeyID    = os.Getenv("AMAZON_PAY_PUBLIC_KEY_ID")
-	privateKeyPath = os.Getenv("AMAZON_PAY_PRIVATE_KEY_PATH")
-	storeID        = os.Getenv("AMAZON_PAY_STORE_ID")
-	merchantID     = os.Getenv("AMAZON_PAY_MERCHANT_ID")
+	publicKeyID = os.Getenv("AMAZON_PAY_PUBLIC_KEY_ID")
+	privateKey  = os.Getenv("AMAZON_PAY_PRIVATE_KEY")
+	storeID     = os.Getenv("AMAZON_PAY_STORE_ID")
+	merchantID  = os.Getenv("AMAZON_PAY_MERCHANT_ID")
 )
 
 // local datastore.
@@ -28,19 +30,19 @@ var (
 
 const htmlDir = "./example/recurring"
 
+var refID = uuid.New().String()
+
 func main() { //nolint:gocognit,cyclop // for example
-	privateKeyData, err := os.ReadFile(privateKeyPath)
+	decodedPrivateKey, err := base64.StdEncoding.DecodeString(privateKey)
 	if err != nil {
 		panic(err)
 	}
-
-	amazonpayCli, err := amazonpay.New(publicKeyID, privateKeyData, "jp", true, http.DefaultClient)
+	amazonpayCli, err := amazonpay.New(publicKeyID, decodedPrivateKey, "jp", true, http.DefaultClient)
 	if err != nil {
 		panic(err)
 	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		refID := uuid.New().String()
 		req := &amazonpay.CreateCheckoutSessionRequest{
 			WebCheckoutDetails: &amazonpay.WebCheckoutDetails{
 				CheckoutReviewReturnURL: "http://localhost:8000/approve",
@@ -66,8 +68,10 @@ func main() { //nolint:gocognit,cyclop // for example
 				},
 			},
 			MerchantMetadata: &amazonpay.MerchantMetadata{
-				NoteToBuyer:         "Testing plan",
-				MerchantReferenceID: refID,
+				NoteToBuyer: "Testing plan",
+			},
+			ProviderMetadata: &amazonpay.ProviderMetadata{
+				ProviderReferenceID: refID,
 			},
 		}
 		payload, err := req.ToPayload()
@@ -98,31 +102,6 @@ func main() { //nolint:gocognit,cyclop // for example
 		}
 	})
 
-	// http.HandleFunc("/review", func(w http.ResponseWriter, r *http.Request) {
-	// 	checkoutSessionID := r.URL.Query().Get("amazonCheckoutSessionId")
-	// 	resp, httpResp, err := amazonpayCli.GetCheckoutSession(r.Context(), checkoutSessionID)
-	// 	if err != nil {
-	// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 		return
-	// 	}
-	// 	defer httpResp.Body.Close()
-	// 	switch httpResp.StatusCode {
-	// 	case http.StatusOK, http.StatusCreated:
-	// 		data := struct {
-	// 			CheckoutSessionID string
-	// 			PaymentDescriptor string
-	// 		}{
-	// 			CheckoutSessionID: resp.CheckoutSessionID,
-	// 			PaymentDescriptor: resp.PaymentPreferences[0].PaymentDescriptor,
-	// 		}
-	// 		if err := template.Must(template.ParseFiles(filepath.Join(htmlDir, "review.html"))).Execute(w, data); err != nil {
-	// 			http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 		}
-	// 	default:
-	// 		http.Error(w, resp.ErrorResponse.ReasonCode+" | "+resp.ErrorResponse.Message, http.StatusInternalServerError)
-	// 	}
-	// })
-
 	http.HandleFunc("/approve", func(w http.ResponseWriter, r *http.Request) {
 		checkoutSessionID := r.URL.Query().Get("amazonCheckoutSessionId")
 		resp, httpResp, err := amazonpayCli.UpdateCheckoutSession(r.Context(), checkoutSessionID, &amazonpay.UpdateCheckoutSessionRequest{
@@ -145,6 +124,7 @@ func main() { //nolint:gocognit,cyclop // for example
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		fmt.Println("approve", resp.WebCheckoutDetails.AmazonPayRedirectURL)
 		defer httpResp.Body.Close()
 		switch httpResp.StatusCode {
 		case http.StatusOK, http.StatusCreated:
@@ -156,27 +136,6 @@ func main() { //nolint:gocognit,cyclop // for example
 
 	http.HandleFunc("/completed", func(w http.ResponseWriter, r *http.Request) {
 		checkoutSessionID := r.URL.Query().Get("amazonCheckoutSessionId")
-		_, httpResp, err := amazonpayCli.UpdateCheckoutSession(r.Context(), checkoutSessionID, &amazonpay.UpdateCheckoutSessionRequest{
-			WebCheckoutDetails: &amazonpay.WebCheckoutDetails{
-				CheckoutResultReturnURL: "http://localhost:8000/completed",
-			},
-			PaymentDetails: &amazonpay.PaymentDetails{
-				PaymentIntent:                 "Confirm",
-				CanHandlePendingAuthorization: amazonpay.Bool(false),
-				ChargeAmount: &amazonpay.Price{
-					Amount:       "1",
-					CurrencyCode: "JPY",
-				},
-			},
-			MerchantMetadata: &amazonpay.MerchantMetadata{
-				NoteToBuyer: "Testing plan",
-			},
-		})
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		defer httpResp.Body.Close()
 		resp, httpResp, err := amazonpayCli.CompleteCheckoutSession(r.Context(), checkoutSessionID, &amazonpay.CompleteCheckoutSessionRequest{
 			ChargeAmount: &amazonpay.Price{
 				Amount:       "1",
@@ -198,6 +157,9 @@ func main() { //nolint:gocognit,cyclop // for example
 				log.Println("ChargeID:", resp.ChargeID)
 				log.Println("ChargePermissionID:", resp.ChargePermissionID)
 				log.Println("ChargePermissionType:", resp.ChargePermissionType)
+				// jsonとしてprintする
+				b, _ := json.Marshal(resp)
+				log.Println(string(b))
 				chargePermissionID = resp.ChargePermissionID
 			case "Canceled":
 			}
