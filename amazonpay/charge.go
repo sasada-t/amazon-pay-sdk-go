@@ -79,3 +79,42 @@ func (c *Client) GetCharge(ctx context.Context, chargeID string) (*GetChargeResp
 	}
 	return resp, httpResp, nil
 }
+
+type CaptureChargeRequest struct {
+	ChargeAmount     *Price            `json:"chargeAmount,omitempty"`
+	SoftDescriptor   string            `json:"softDescriptor,omitempty"`
+	MerchantMetadata *MerchantMetadata `json:"merchantMetadata,omitempty"`
+	ProviderMetadata *ProviderMetadata `json:"providerMetadata,omitempty"`
+}
+
+type CaptureChargeResponse struct {
+	ErrorResponse
+	ChargeID            string            `json:"chargeId,omitempty"`
+	ChargePermissionID  string            `json:"chargePermissionId,omitempty"`
+	ChargeAmount        *Price            `json:"chargeAmount,omitempty"`
+	CaptureAmount       *Price            `json:"captureAmount,omitempty"`
+	RefundedAmount      *Price            `json:"refundedAmount,omitempty"`
+	ConvertedAmount     string            `json:"convertedAmount,omitempty"`
+	ConversionRate      string            `json:"conversionRate,omitempty"`
+	SoftDescriptor      string            `json:"softDescriptor,omitempty"`
+	MerchantMetadata    *MerchantMetadata `json:"merchantMetadata,omitempty"`
+	ProviderMetadata    *ProviderMetadata `json:"providerMetadata,omitempty"`
+	StatusDetails       *StatusDetails    `json:"statusDetails,omitempty"`
+	CreationTimestamp   string            `json:"creationTimestamp,omitempty"`
+	ExpirationTimestamp string            `json:"expirationTimestamp,omitempty"`
+	ReleaseEnvironment  string            `json:"releaseEnvironment,omitempty"`
+}
+
+func (c *Client) CaptureCharge(ctx context.Context, chargeID string, req *CaptureChargeRequest) (*CaptureChargeResponse, *http.Response, error) {
+	path := fmt.Sprintf("%s/charges/%s/capture", APIVersion, chargeID)
+	httpReq, err := c.NewRequest(http.MethodPost, path, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	resp := new(CaptureChargeResponse)
+	httpResp, err := c.Do(ctx, httpReq, resp)
+	if err != nil {
+		return nil, httpResp, err
+	}
+	return resp, httpResp, nil
+}

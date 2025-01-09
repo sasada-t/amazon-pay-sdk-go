@@ -11,8 +11,8 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/abyssparanoia/amazon-pay-sdk-go/amazonpay"
 	"github.com/google/uuid"
+	"github.com/sasada-t/amazon-pay-sdk-go/amazonpay"
 )
 
 // envs.
