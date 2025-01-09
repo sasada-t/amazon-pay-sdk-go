@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/abyssparanoia/amazon-pay-sdk-go/amazonpay/signing"
+	"github.com/sasada-t/amazon-pay-sdk-go/amazonpay/signing"
 )
 
 type CreateCheckoutSessionRequest struct {

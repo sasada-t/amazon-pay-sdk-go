@@ -5,7 +5,7 @@ amazon-pay-sdk-go is a Go client library for accessing the [Amazon Pay API](http
 ## Usage
 
 ```go
-import "github.com/abyssparanoia/amazon-pay-sdk-go/amazonpay"
+import "github.com/sasada-t/amazon-pay-sdk-go/amazonpay"
 
 func main() {
     pay, err := amazonpay.New("..")

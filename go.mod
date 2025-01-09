@@ -1,4 +1,4 @@
-module github.com/abyssparanoia/amazon-pay-sdk-go
+module github.com/sasada-t/amazon-pay-sdk-go
 
 go 1.22.4
 
