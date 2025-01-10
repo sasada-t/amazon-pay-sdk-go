@@ -81,7 +81,7 @@ func (c *Client) GetCharge(ctx context.Context, chargeID string) (*GetChargeResp
 }
 
 type CaptureChargeRequest struct {
-	ChargeAmount     *Price            `json:"chargeAmount,omitempty"`
+	CaptureAmount    *Price            `json:"captureAmount,omitempty"`
 	SoftDescriptor   string            `json:"softDescriptor,omitempty"`
 	MerchantMetadata *MerchantMetadata `json:"merchantMetadata,omitempty"`
 	ProviderMetadata *ProviderMetadata `json:"providerMetadata,omitempty"`
@@ -107,7 +107,7 @@ type CaptureChargeResponse struct {
 
 func (c *Client) CaptureCharge(ctx context.Context, chargeID string, req *CaptureChargeRequest) (*CaptureChargeResponse, *http.Response, error) {
 	path := fmt.Sprintf("%s/charges/%s/capture", APIVersion, chargeID)
-	httpReq, err := c.NewRequest(http.MethodPost, path, nil)
+	httpReq, err := c.NewRequest(http.MethodPost, path, req)
 	if err != nil {
 		return nil, nil, err
 	}
