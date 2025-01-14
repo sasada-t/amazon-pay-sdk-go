@@ -118,3 +118,39 @@ func (c *Client) CaptureCharge(ctx context.Context, chargeID string, req *Captur
 	}
 	return resp, httpResp, nil
 }
+
+type CancelChargeRequest struct {
+	CancellationReason string `json:"cancellationReason,omitempty"`
+}
+
+type CancelChargeResponse struct {
+	ErrorResponse
+	ChargeID            string            `json:"chargeId,omitempty"`
+	ChargePermissionID  string            `json:"chargePermissionId,omitempty"`
+	ChargeAmount        *Price            `json:"chargeAmount,omitempty"`
+	CaptureAmount       *Price            `json:"captureAmount,omitempty"`
+	RefundedAmount      *Price            `json:"refundedAmount,omitempty"`
+	ConvertedAmount     string            `json:"convertedAmount,omitempty"`
+	ConversionRate      string            `json:"conversionRate,omitempty"`
+	SoftDescriptor      string            `json:"softDescriptor,omitempty"`
+	MerchantMetadata    *MerchantMetadata `json:"merchantMetadata,omitempty"`
+	ProviderMetadata    *ProviderMetadata `json:"providerMetadata,omitempty"`
+	StatusDetails       *StatusDetails    `json:"statusDetails,omitempty"`
+	CreationTimestamp   string            `json:"creationTimestamp,omitempty"`
+	ExpirationTimestamp string            `json:"expirationTimestamp,omitempty"`
+	ReleaseEnvironment  string            `json:"releaseEnvironment,omitempty"`
+}
+
+func (c *Client) CancelCharge(ctx context.Context, chargeID string, req *CancelChargeRequest) (*CancelChargeResponse, *http.Response, error) {
+	path := fmt.Sprintf("%s/charges/%s/cancel", APIVersion, chargeID)
+	httpReq, err := c.NewRequest(http.MethodDelete, path, req)
+	if err != nil {
+		return nil, nil, err
+	}
+	resp := new(CancelChargeResponse)
+	httpResp, err := c.Do(ctx, httpReq, resp)
+	if err != nil {
+		return nil, httpResp, err
+	}
+	return resp, httpResp, nil
+}
